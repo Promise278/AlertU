@@ -1,10 +1,8 @@
+import Dashboard from "./pages/Dashboard";
+import "./App.css";
+
 function App() {
-  return (
-    <div>
-      <h1>CampusPulse</h1>
-      <p>Know what's happening around you.</p>
-    </div>
-  );
+  return <Dashboard />;
 }
 
 export default App;
