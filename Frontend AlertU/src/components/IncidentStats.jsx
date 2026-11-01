@@ -1,5 +1,3 @@
-import mockReports from "../data/mockReports";
-
 function IncidentStats({ reports }) {
   const total = reports.length;
 

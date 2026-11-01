@@ -1,3 +1,10 @@
+const campusLocations = {
+  "Main Gate": [6.22, 6.978],
+  "Library Road": [6.221, 6.979],
+  "Student Centre": [6.219, 6.98],
+  "Hostel Road": [6.218, 6.977],
+};
+
 function ReportForm({ onSubmit, onCancel }) {
   function handleSubmit(event) {
     event.preventDefault();
@@ -12,7 +19,10 @@ function ReportForm({ onSubmit, onCancel }) {
       severity: formData.get("severity"),
       status: "Pending",
       time: "Just now",
+      coordinates: campusLocations[formData.get("location")],
+      description: formData.get("description"),
     };
+    console.log("NEW REPORT:", newReport);
 
     onSubmit(newReport);
     event.target.reset();
@@ -54,12 +64,13 @@ function ReportForm({ onSubmit, onCancel }) {
 
         <div className="form-group">
           <label>Location</label>
-          <input
-            type="text"
-            name="location"
-            placeholder="Where did this happen?"
-            required
-          />
+          <select name="location" required>
+            <option value="">Select incident location</option>
+            <option value="Main Gate">Main Gate</option>
+            <option value="Library Road">Library Road</option>
+            <option value="Student Centre">Student Centre</option>
+            <option value="Hostel Road">Hostel Road</option>
+          </select>
         </div>
 
         <div className="form-group">

@@ -1,6 +1,17 @@
-function IncidentCard({ report }) {
+function IncidentCard({ report, onClick }) {
   return (
-    <article className="incident-card">
+    <article
+      className="incident-card"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
       <div className="incident-card-top">
         <div>
           <h3>{report.title}</h3>

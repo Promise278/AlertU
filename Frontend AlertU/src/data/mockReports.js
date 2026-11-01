@@ -7,6 +7,7 @@ const mockReports = [
     severity: "High",
     status: "Pending",
     time: "5 minutes ago",
+    coordinates: [6.22, 6.978],
   },
   {
     id: 2,
@@ -16,6 +17,7 @@ const mockReports = [
     severity: "Medium",
     status: "Verified",
     time: "20 minutes ago",
+    coordinates: [6.221, 6.979],
   },
   {
     id: 3,
@@ -25,6 +27,7 @@ const mockReports = [
     severity: "High",
     status: "Pending",
     time: "35 minutes ago",
+    coordinates: [6.219, 6.98],
   },
   {
     id: 4,
@@ -34,6 +37,7 @@ const mockReports = [
     severity: "Low",
     status: "Resolved",
     time: "1 hour ago",
+    coordinates: [6.218, 6.977],
   },
 ];
 
