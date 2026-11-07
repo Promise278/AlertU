@@ -1,18 +1,22 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/auth-context'
 
 import './Profile.css'
 
 function Profile() {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [error, setError] = useState('')
 
-  const displayName = user?.displayName || 'Demo Student'
+  const displayName = user?.displayName || 'AlertU member'
+
+  const roleLabel = user?.role
+    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    : 'Student'
 
   const avatarInitial = displayName
     .trim()
@@ -50,16 +54,8 @@ function Profile() {
 
         <div className="profile-identity">
           <h2>{displayName}</h2>
-          <p>
-            {user?.role || 'Student account'}
-          </p>
+          <p>{roleLabel} account</p>
         </div>
-
-        {!isAuthenticated && (
-          <span className="profile-demo-badge">
-            DEMO
-          </span>
-        )}
 
         <div className="profile-divider"></div>
 
@@ -73,54 +69,42 @@ function Profile() {
           <div className="profile-information-item">
             <span>Email address</span>
             <strong>
-              {user?.email || 'student@example.com'}
+              {user?.email || 'Not provided'}
             </strong>
           </div>
 
           <div className="profile-information-item">
             <span>Campus</span>
             <strong>
-              {user?.campusId || 'Not assigned'}
+              {user?.campusName || 'Not assigned'}
             </strong>
           </div>
 
           <div className="profile-information-item">
             <span>Account type</span>
-            <strong>
-              {user?.role || 'Student'}
-            </strong>
+            <strong>{roleLabel}</strong>
           </div>
 
         </div>
 
-        {!isAuthenticated && (
-          <p className="profile-demo-notice">
-            This is demonstration account information.
-            Your actual details will appear after
-            authentication is connected.
-          </p>
-        )}
+        <div className="profile-signout-section">
 
-        {isAuthenticated && (
-          <div className="profile-signout-section">
+          {error && (
+            <p className="profile-signout-error" role="alert">
+              {error}
+            </p>
+          )}
 
-            {error && (
-              <p className="profile-signout-error" role="alert">
-                {error}
-              </p>
-            )}
+          <button
+            type="button"
+            className="profile-signout-button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+          >
+            {isSigningOut ? 'Signing out...' : 'Sign out'}
+          </button>
 
-            <button
-              type="button"
-              className="profile-signout-button"
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-            >
-              {isSigningOut ? 'Signing out...' : 'Sign out'}
-            </button>
-
-          </div>
-        )}
+        </div>
 
       </section>
 

@@ -52,7 +52,7 @@ export default function SplashScreen() {
         <View className="flex-1" />
 
         <View className="items-center justify-center">
-          <Logo variant="light" />
+          <Logo tone="inverted" />
         </View>
 
         <View className="flex-1 items-center justify-end pb-10">

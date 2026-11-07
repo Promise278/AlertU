@@ -2,7 +2,7 @@
 
 const express = require('express');
 const { ROLES } = require('../constants/roles');
-const { authorize } = require('../middleware/auth.middleware');
+const { authorize } = require('../middleware/authenticate');
 const validate = require('../middleware/validate.middleware');
 const { moderationLimiter } = require('../middleware/rateLimit.middleware');
 const {

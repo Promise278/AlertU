@@ -7,13 +7,13 @@ import { cn } from '@/lib/cn';
 import { Text } from './text';
 
 type LogoProps = {
-  variant?: 'light' | 'dark';
+  tone?: 'default' | 'inverted';
   compact?: boolean;
   className?: string;
 };
 
-export function Logo({ variant = 'dark', compact = false, className }: LogoProps) {
-  const isLight = variant === 'light';
+export function Logo({ tone = 'default', compact = false, className }: LogoProps) {
+  const isInverted = tone === 'inverted';
   const markSize = compact ? 34 : 92;
   const wordSize = compact ? 'text-[26px]' : 'text-[46px]';
   const taglineSize = compact ? 'text-[10px]' : 'text-[13px]';
@@ -25,7 +25,7 @@ export function Logo({ variant = 'dark', compact = false, className }: LogoProps
         className
       )}>
       <Image
-        source={isLight ? images.markWhite : images.markNavy}
+        source={isInverted ? images.markWhite : images.markNavy}
         style={{ width: markSize, height: markSize * 0.87 }}
         contentFit="contain"
       />
@@ -36,7 +36,7 @@ export function Logo({ variant = 'dark', compact = false, className }: LogoProps
             wordSize,
             'tracking-[-1.5px]',
             compact ? 'leading-7' : 'leading-[52px]',
-            isLight ? 'text-white' : 'text-navy'
+            isInverted ? 'text-white' : 'text-navy'
           )}>
           Alert
           <Text weight="extrabold" className={cn(wordSize, 'tracking-[-1.5px] text-yellow')}>
@@ -49,7 +49,7 @@ export function Logo({ variant = 'dark', compact = false, className }: LogoProps
             className={cn(
               taglineSize,
               '-mt-1 tracking-[0.2px]',
-              isLight ? 'text-white/80' : 'text-muted'
+              isInverted ? 'text-white/80' : 'text-muted'
             )}>
             Stay aware, stay ahead.
           </Text>

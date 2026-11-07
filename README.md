@@ -236,7 +236,7 @@ AlertU/
 | Area | What exists today |
 | --- | --- |
 | Repo and tooling | npm-based monorepo with independent client and backend packages |
-| Mobile app | Expo starter that runs on Android, iOS, and web; tab navigation, light/dark theming, splash overlay |
+| Mobile app | Expo starter that runs on Android, iOS, and web; tab navigation, light interface, splash overlay |
 | Web client | Vite + React starter with an empty app shell |
 | API | Express, Sequelize, and PostgreSQL dependencies installed; no routes, models, or entry point yet |
 | Product features | Not implemented yet |

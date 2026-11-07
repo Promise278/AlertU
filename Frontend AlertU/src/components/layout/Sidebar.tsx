@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import './Sidebar.css'
 
 const navigationItems = [
-  { label: 'Campus Pulse', path: '/', icon: '⌂' },
+  { label: 'Campus Pulse', path: '/dashboard', icon: '⌂' },
   { label: 'Campus Map', path: '/map', icon: '◎' },
   { label: 'Report Incident', path: '/report', icon: '+' },
   { label: 'Saved Incidents', path: '/saved', icon: '☆' },
@@ -23,7 +23,7 @@ function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
-            end={item.path === '/'}
+            end={item.path === '/dashboard'}
             className={({ isActive }) =>
               `sidebar-link ${isActive ? 'active' : ''} ${
                 item.path === '/report' ? 'report-link' : ''

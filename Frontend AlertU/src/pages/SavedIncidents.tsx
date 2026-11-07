@@ -2,10 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import {
-  getIncidents,
-  subscribeToIncidents,
-} from '../services/incidentStore'
+import { fetchIncidents } from '../services/incidents'
 
 import {
   getSavedIncidentIds,
@@ -21,16 +18,34 @@ function SavedIncidents() {
     getSavedIncidentIds
   )
 
-  const [incidents, setIncidents] = useState<Incident[]>(
-    getIncidents
-  )
+  const [incidents, setIncidents] = useState<Incident[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    const unsubscribe = subscribeToIncidents(() => {
-      setIncidents(getIncidents())
-    })
+    const controller = new AbortController()
+    let active = true
 
-    return unsubscribe
+    fetchIncidents({ signal: controller.signal })
+      .then((records) => {
+        if (active) setIncidents(records)
+      })
+      .catch((loadError) => {
+        if (!active || controller.signal.aborted) return
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Could not load saved incidents.',
+        )
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
   }, [])
 
   const savedIncidents = incidents.filter(
@@ -67,7 +82,17 @@ function SavedIncidents() {
           </div>
         </div>
 
-        {savedIncidents.length > 0 ? (
+        {isLoading ? (
+          <div className="pulse-empty-state">
+            <h3>Loading saved incidents</h3>
+            <p>Fetching your saved incidents from AlertU.</p>
+          </div>
+        ) : error ? (
+          <div className="pulse-empty-state">
+            <h3>Could not load saved incidents</h3>
+            <p>{error}</p>
+          </div>
+        ) : savedIncidents.length > 0 ? (
           savedIncidents.map((incident) => (
             <div
               className="pulse-incident-card"
@@ -76,19 +101,16 @@ function SavedIncidents() {
 
               <div className="pulse-incident-topline">
                 <span className="pulse-category">
-                  {incident.category}
+                  {incident.categoryLabel}
                 </span>
 
                 <span
-                  className={`pulse-status ${
-                    incident.status === 'Verified'
-                      ? 'verified'
-                      : incident.status === 'Resolved'
-                        ? 'resolved'
-                        : 'under-review'
-                  }`}
+                  className={`pulse-status ${incident.status.replace(
+                    /_/g,
+                    '-',
+                  )}`}
                 >
-                  {incident.status}
+                  {incident.statusLabel}
                 </span>
               </div>
 
@@ -124,7 +146,7 @@ function SavedIncidents() {
             </p>
 
             <Link
-              to="/"
+              to="/dashboard"
               className="pulse-report-button"
             >
               Explore Campus Pulse

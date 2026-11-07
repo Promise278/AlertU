@@ -19,7 +19,8 @@ No local file storage is used, so it can run on any container host.
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | Copy from `backend/.env` |
+| `DATABASE_URL` | Copy from `backend/.env`; the path must end in `/defaultdb` |
+| `DB_NAME` | `defaultdb` |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Base64 of the service account file |
 
 `JWT_SECRET` is generated automatically by Render.
@@ -58,7 +59,8 @@ Set the same environment variables as above.
 
 ```dotenv
 NODE_ENV=production
-DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<database>
+DATABASE_URL=postgres://<user>:<password>@<host>:<port>/defaultdb
+DB_NAME=defaultdb
 JWT_SECRET=<32+ random characters>
 FIREBASE_PROJECT_ID=alertu-a7a43
 FIREBASE_SERVICE_ACCOUNT_JSON=<base64 service-account JSON>
@@ -73,6 +75,8 @@ Optional:
 CORS_ORIGIN=https://your-web-app.example.com   # only for a browser client
 DB_SSL=true                                    # already the default
 ```
+
+`DB_NAME` takes precedence over the database path in `DATABASE_URL`, so keep it set to `defaultdb`.
 
 `GOOGLE_APPLICATION_CREDENTIALS` also works if the host lets you mount the
 service-account file, but `FIREBASE_SERVICE_ACCOUNT_JSON` is easier on Render.

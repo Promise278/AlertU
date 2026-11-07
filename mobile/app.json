@@ -16,9 +16,9 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/AlertU Blue Shield Alert Logo.png",
-        "backgroundImage": "./assets/images/AlertU Blue Shield Alert Logo.png",
-        "monochromeImage": "./assets/images/AlertU Blue Shield Alert Logo.png"
+        "foregroundImage": "./assets/images/AlertU_ Stay Aware, Stay Ahead.png",
+        "backgroundImage": "./assets/images/AlertU_ Stay Aware, Stay Ahead.png",
+        "monochromeImage": "./assets/images/AlertU_ Stay Aware, Stay Ahead.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -58,6 +58,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "db27cceb-4ef0-40b1-a22d-2003a6401657"
+      }
     }
   }
 }

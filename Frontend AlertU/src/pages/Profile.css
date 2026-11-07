@@ -49,18 +49,6 @@
   margin-top: 5px;
 }
 
-.profile-demo-badge {
-  position: absolute;
-  top: 28px;
-  right: 28px;
-  background: #FFF4D6;
-  color: #8A5A00;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
 .profile-divider {
   height: 1px;
   background: var(--color-border);
@@ -89,16 +77,6 @@
   overflow-wrap: anywhere;
 }
 
-.profile-demo-notice {
-  margin-top: 28px;
-  padding: 14px;
-  background: var(--color-background);
-  border-radius: 8px;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
 @media (max-width: 600px) {
   .profile-heading h1 {
     font-size: 25px;
@@ -113,10 +91,6 @@
     gap: 20px;
   }
 
-  .profile-demo-badge {
-    top: 20px;
-    right: 20px;
-  }
 }
 
 .profile-signout-section {

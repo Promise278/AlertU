@@ -2,47 +2,81 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './CampusPulse.css'
-import { DEFAULT_CAMPUS } from '../data/campus'
 import {
-  getIncidents,
-  subscribeToIncidents,
-} from '../services/incidentStore'
-import type { Incident } from '../types/incident'
+  fetchIncidents,
+  INCIDENT_CATEGORIES,
+  INCIDENT_CATEGORY_LABELS,
+} from '../services/incidents'
+import type {
+  Incident,
+  IncidentCategory,
+  IncidentStatus,
+} from '../types/incident'
 import {
   getSavedIncidentIds,
   toggleSavedIncident,
 } from '../services/savedIncidents'
 
-const statusFilters = [
-  'All activity',
-  'Under review',
-  'Verified',
-  'Resolved',
+const statusFilters: Array<{
+  label: string
+  value: IncidentStatus | 'all'
+}> = [
+  { label: 'All activity', value: 'all' },
+  { label: 'Reported', value: 'reported' },
+  { label: 'Under review', value: 'under_review' },
+  { label: 'Verified', value: 'verified' },
+  { label: 'Resolved', value: 'resolved' },
 ]
 
-const categoryFilters = [
-  'All categories',
-  'Security',
-  'Facilities',
-  'Harassment',
-  'Other',
+const categoryFilters: Array<{
+  label: string
+  value: IncidentCategory | 'all'
+}> = [
+  { label: 'All categories', value: 'all' },
+  ...INCIDENT_CATEGORIES.map((category) => ({
+    label: INCIDENT_CATEGORY_LABELS[category],
+    value: category,
+  })),
 ]
 
 function CampusPulse() {
-  const [incidents, setIncidents] = useState<Incident[]>(
-  getIncidents
-)
+  const [incidents, setIncidents] = useState<Incident[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [reloadToken, setReloadToken] = useState(0)
 
-useEffect(() => {
-  const unsubscribe = subscribeToIncidents(() => {
-    setIncidents(getIncidents())
-  })
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
 
-  return unsubscribe
-}, [])
+    fetchIncidents({ signal: controller.signal })
+      .then((records) => {
+        if (active) setIncidents(records)
+      })
+      .catch((loadError) => {
+        if (!active || controller.signal.aborted) return
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Could not load campus activity.',
+        )
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
 
-  const [activeFilter, setActiveFilter] = useState('All activity')
-  const [activeCategory, setActiveCategory] = useState('All categories')
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [reloadToken])
+
+  const [activeFilter, setActiveFilter] = useState<
+    IncidentStatus | 'all'
+  >('all')
+  const [activeCategory, setActiveCategory] = useState<
+    IncidentCategory | 'all'
+  >('all')
   const [searchQuery, setSearchQuery] = useState('')
 
   const [savedIds, setSavedIds] = useState<string[]>(
@@ -55,34 +89,33 @@ useEffect(() => {
   }
 
   const filteredIncidents = incidents.filter((incident) => {
-    const belongsToCampus =
-      incident.campusId === DEFAULT_CAMPUS.id
     const matchesStatus =
-      activeFilter === 'All activity' ||
-      incident.status === activeFilter
+      activeFilter === 'all' || incident.status === activeFilter
 
     const matchesCategory =
-      activeCategory === 'All categories' ||
-      incident.category.toLowerCase() === activeCategory.toLowerCase()
+      activeCategory === 'all' ||
+      incident.category === activeCategory
 
     const search = searchQuery.trim().toLowerCase()
 
     const matchesSearch =
       incident.title.toLowerCase().includes(search) ||
-      incident.location.toLowerCase().includes(search)
+      incident.location.toLowerCase().includes(search) ||
+      (incident.description ?? '').toLowerCase().includes(search)
 
-    return (
-  belongsToCampus &&
-  matchesStatus &&
-  matchesCategory &&
-  matchesSearch
-)
+    return matchesStatus && matchesCategory && matchesSearch
   })
 
   function clearFilters() {
-    setActiveFilter('All activity')
-    setActiveCategory('All categories')
+    setActiveFilter('all')
+    setActiveCategory('all')
     setSearchQuery('')
+  }
+
+  function reloadIncidents() {
+    setIsLoading(true)
+    setError('')
+    setReloadToken((token) => token + 1)
   }
 
   return (
@@ -120,15 +153,15 @@ useEffect(() => {
           <div className="pulse-filters">
             {statusFilters.map((filter) => (
               <button
-                key={filter}
+                key={filter.value}
                 type="button"
                 className={`pulse-filter ${
-                  activeFilter === filter ? 'active' : ''
+                  activeFilter === filter.value ? 'active' : ''
                 }`}
-                aria-pressed={activeFilter === filter}
-                onClick={() => setActiveFilter(filter)}
+                aria-pressed={activeFilter === filter.value}
+                onClick={() => setActiveFilter(filter.value)}
               >
-                {filter}
+                {filter.label}
               </button>
             ))}
           </div>
@@ -140,15 +173,15 @@ useEffect(() => {
           <div className="pulse-filters">
             {categoryFilters.map((category) => (
               <button
-                key={category}
+                key={category.value}
                 type="button"
                 className={`pulse-filter ${
-                  activeCategory === category ? 'active' : ''
+                  activeCategory === category.value ? 'active' : ''
                 }`}
-                aria-pressed={activeCategory === category}
-                onClick={() => setActiveCategory(category)}
+                aria-pressed={activeCategory === category.value}
+                onClick={() => setActiveCategory(category.value)}
               >
-                {category}
+                {category.label}
               </button>
             ))}
           </div>
@@ -166,29 +199,42 @@ useEffect(() => {
               {filteredIncidents.length !== 1 ? 's' : ''} found
             </p>
           </div>
-
-          <span className="pulse-demo-label">DEMO DATA</span>
         </div>
 
-        {filteredIncidents.length > 0 ? (
+        {isLoading ? (
+          <div className="pulse-empty-state">
+            <h3>Loading campus activity</h3>
+            <p>Fetching the latest incidents from AlertU.</p>
+          </div>
+        ) : error ? (
+          <div className="pulse-empty-state">
+            <h3>Could not load campus activity</h3>
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="pulse-clear-button"
+              onClick={reloadIncidents}
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredIncidents.length > 0 ? (
           filteredIncidents.map((incident) => (
             <div className="pulse-incident-card" key={incident.id}>
 
               <div className="pulse-incident-topline">
                 <span className="pulse-category">
-                  {incident.category}
+                  {incident.categoryLabel}
                 </span>
 
                 <span
-                  className={`pulse-status ${
-                    incident.status === 'Verified'
-                      ? 'verified'
-                      : incident.status === 'Resolved'
-                        ? 'resolved'
-                        : 'under-review'
-                  }`}
+                  className={`pulse-status ${incident.status.replace(
+                    /_/g,
+                    '-',
+                  )}`}
                 >
-                  {incident.status}
+                  {incident.statusLabel}
                 </span>
               </div>
 

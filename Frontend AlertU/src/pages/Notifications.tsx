@@ -1,40 +1,81 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
 import {
-  getNotifications,
-  saveNotifications,
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
   type AlertNotification,
 } from '../services/notifications'
 
 import './Notifications.css'
 
 function Notifications() {
-  const [notifications, setNotifications] = useState<AlertNotification[]>(
-    getNotifications
-  )
+  const [notifications, setNotifications] = useState<
+    AlertNotification[]
+  >([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [reloadToken, setReloadToken] = useState(0)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+
+    fetchNotifications(controller.signal)
+      .then((records) => {
+        if (active) setNotifications(records)
+      })
+      .catch((loadError) => {
+        if (!active || controller.signal.aborted) return
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Could not load notifications.',
+        )
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [reloadToken])
 
   const unreadCount = notifications.filter(
     (notification) => !notification.read
   ).length
 
-  function markAsRead(id: string) {
-    const updated = notifications.map((notification) =>
-      notification.id === id
-        ? { ...notification, read: true }
-        : notification
-    )
-
-    setNotifications(updated)
-    saveNotifications(updated)
+  function reloadNotifications() {
+    setIsLoading(true)
+    setError('')
+    setReloadToken((token) => token + 1)
   }
 
-  function markAllAsRead() {
-    const updated = notifications.map((notification) => ({
-      ...notification,
-      read: true,
-    }))
+  function handleMarkAsRead(id: string) {
+    markNotificationRead(id)
 
-    setNotifications(updated)
-    saveNotifications(updated)
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === id
+          ? { ...notification, read: true }
+          : notification
+      )
+    )
+  }
+
+  function handleMarkAllAsRead() {
+    markAllNotificationsRead(
+      notifications.map((notification) => notification.id)
+    )
+
+    setNotifications((current) =>
+      current.map((notification) => ({
+        ...notification,
+        read: true,
+      }))
+    )
   }
 
   return (
@@ -52,7 +93,7 @@ function Notifications() {
         <button
           type="button"
           className="mark-all-button"
-          onClick={markAllAsRead}
+          onClick={handleMarkAllAsRead}
           disabled={unreadCount === 0}
         >
           Mark all as read
@@ -66,7 +107,25 @@ function Notifications() {
           <span>{unreadCount} unread</span>
         </div>
 
-        {notifications.length > 0 ? (
+        {isLoading ? (
+          <div className="pulse-empty-state">
+            <h3>Loading notifications</h3>
+            <p>Fetching your latest alerts from AlertU.</p>
+          </div>
+        ) : error ? (
+          <div className="pulse-empty-state">
+            <h3>Could not load notifications</h3>
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="pulse-clear-button"
+              onClick={reloadNotifications}
+            >
+              Try again
+            </button>
+          </div>
+        ) : notifications.length > 0 ? (
           notifications.map((notification) => (
             <div
               key={notification.id}
@@ -87,7 +146,9 @@ function Notifications() {
                 {!notification.read && (
                   <button
                     type="button"
-                    onClick={() => markAsRead(notification.id)}
+                    onClick={() =>
+                      handleMarkAsRead(notification.id)
+                    }
                   >
                     Mark as read
                   </button>
@@ -105,10 +166,6 @@ function Notifications() {
         )}
 
       </section>
-
-      <p className="notifications-demo-notice">
-        DEMO NOTIFICATIONS — These are sample updates, not live alerts.
-      </p>
 
     </div>
   )

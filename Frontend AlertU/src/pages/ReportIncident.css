@@ -165,12 +165,17 @@
   font-size: 22px;
 }
 
-.report-demo-notice {
-  padding: 12px;
-  border-radius: 8px;
-  background: #fff4d8;
-  color: #9a6700 !important;
-  font-size: 12px !important;
+.report-success-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--color-info);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.report-submit-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 @media (max-width: 767px) {

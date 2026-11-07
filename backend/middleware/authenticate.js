@@ -68,6 +68,48 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+const verifyFirebaseUser = async (req, res, next) => {
+  const token = readBearerToken(req);
+
+  if (!token) {
+    return next(AppError.unauthorized('Authentication required', 'AUTH_REQUIRED'));
+  }
+
+  try {
+    if (isDevelopmentToken(token)) {
+      req.user = await resolveDevUser();
+      req.authType = 'dev';
+      return next();
+    }
+
+    if (!isFirebaseConfigured()) {
+      return next(
+        AppError.serviceUnavailable(
+          'Firebase Authentication is not configured on this server',
+          'AUTH_NOT_CONFIGURED'
+        )
+      );
+    }
+
+    req.firebaseUser = await verifyIdToken(token);
+    req.authType = 'firebase';
+    return next();
+  } catch (error) {
+    if (error instanceof AppError) return next(error);
+
+    if (String(error.code || '').startsWith('auth/')) {
+      return next(
+        AppError.unauthorized(
+          'Invalid or expired authentication token',
+          'INVALID_TOKEN'
+        )
+      );
+    }
+
+    return next(error);
+  }
+};
+
 const optionalAuth = async (req, res, next) => {
   const token = readBearerToken(req);
   if (!token) return next();
@@ -88,6 +130,7 @@ const authorize = (...roles) => (req, res, next) => {
 
 module.exports = {
   authenticate,
+  verifyFirebaseUser,
   optionalAuth,
   authorize,
 };

@@ -54,6 +54,28 @@
   color: #2458a6;
 }
 
+.incident-details-status.reported,
+.incident-details-status.candidate,
+.incident-details-status.corroborated,
+.incident-details-status.reopened {
+  background: #eef2f7;
+  color: #475569;
+}
+
+.incident-details-status.disputed,
+.incident-details-status.rejected,
+.incident-details-status.expired {
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+.incident-details-summary {
+  margin: -8px 0 24px;
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
 .incident-details-card h1 {
   margin-bottom: 28px;
   color: var(--color-navy);
@@ -80,15 +102,6 @@
   color: var(--color-navy);
   font-size: 14px;
   font-weight: 600;
-}
-
-.incident-demo-notice {
-  margin-top: 22px;
-  padding: 13px;
-  border-radius: 8px;
-  background: var(--color-background);
-  color: #64748b;
-  font-size: 12px;
 }
 
 .incident-not-found {
