@@ -338,11 +338,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setAuthError(null)
 
       try {
-        const credential = await createUserWithEmailAndPassword(
-          firebaseAuth,
-          email.trim(),
-          password,
-        )
+        let credential
+        try {
+          credential = await createUserWithEmailAndPassword(
+            firebaseAuth,
+            email.trim(),
+            password,
+          )
+        } catch (error) {
+          const code =
+            typeof error === 'object' && error && 'code' in error
+              ? String((error as { code?: string }).code || '')
+              : ''
+
+          // Firebase may have created the identity during an earlier attempt
+          // even if the API profile step failed. Signing in lets /me create or
+          // recover the corresponding row in the configured PostgreSQL DB.
+          if (code !== 'auth/email-already-in-use') throw error
+
+          credential = await signInWithEmailAndPassword(
+            firebaseAuth,
+            email.trim(),
+            password,
+          )
+          await completeRegistration(credential.user)
+          return
+        }
 
         await updateProfile(credential.user, {
           displayName: fullName.trim(),
