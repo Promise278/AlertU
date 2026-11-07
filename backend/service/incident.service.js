@@ -134,21 +134,36 @@ const getIncident = async ({ incidentId, viewer }) => {
     timeline: timeline(incident, { moderator: privileged }),
   };
 
-  if (privileged) {
-    const links = await IncidentReport.findAll({
-      where: { incidentId, active: true },
-      include: [
-        {
-          model: Report,
-          as: 'report',
-          include: [
-            { model: User, as: 'reporter', attributes: ['id', 'displayName', 'email', 'role'] },
-          ],
-        },
-      ],
-      order: [['linkedAt', 'ASC']],
-    });
+  const links = await IncidentReport.findAll({
+    where: { incidentId, active: true },
+    include: [
+      {
+        model: Report,
+        as: 'report',
+        ...(privileged ? {} : { attributes: ['reporterUserId', 'mediaRefs'] }),
+        ...(privileged
+          ? {
+              include: [
+                {
+                  model: User,
+                  as: 'reporter',
+                  attributes: ['id', 'displayName', 'email', 'role'],
+                },
+              ],
+            }
+          : {}),
+      },
+    ],
+    order: [['linkedAt', 'ASC']],
+  });
 
+  response.mediaRefs = links
+    .filter((link) =>
+      privileged || (viewer && link.report?.reporterUserId === viewer.id)
+    )
+    .flatMap((link) => link.report?.mediaRefs || []);
+
+  if (privileged) {
     response.reports = links.map((link) => ({
       ...reportBase(link.report, { viewer }),
       linkSource: link.linkSource,

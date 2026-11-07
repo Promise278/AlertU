@@ -63,6 +63,43 @@
   min-height: 120px;
 }
 
+.report-field input[type='file'] {
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.report-field small {
+  display: block;
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.report-image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.report-image-item {
+  position: relative;
+  width: 104px;
+}
+
+.report-image-item img {
+  width: 104px;
+  height: 88px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.report-image-item button {
+  margin-top: 5px;
+  color: #b42318;
+  font-size: 12px;
+}
+
 .report-identity {
   margin-bottom: 26px;
   border: none;

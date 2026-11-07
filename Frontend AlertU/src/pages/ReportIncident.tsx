@@ -14,6 +14,7 @@ import {
 import type { IncidentCategory } from '../types/incident'
 import LocationPicker from '../components/map/LocationPicker'
 import { campusLocations } from '../data/campusLocations'
+import { uploadReportImage } from '../services/uploads'
 
 import './ReportIncident.css'
 
@@ -26,6 +27,9 @@ function ReportIncident() {
   const [identity, setIdentity] = useState<
     'identified' | 'private' | ''
   >('')
+  const [attachments, setAttachments] = useState<
+    Array<{ file: File; preview: string }>
+  >([])
 
   const [reference, setReference] = useState('')
   const [incidentId, setIncidentId] = useState('')
@@ -60,6 +64,51 @@ function ReportIncident() {
     )
   }
 
+  function handleImageSelection(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files || [])
+    event.target.value = ''
+
+    const remainingSlots = 5 - attachments.length
+    if (remainingSlots <= 0) {
+      setSubmitError('You can attach up to 5 images.')
+      return
+    }
+
+    let validationMessage = ''
+    if (selectedFiles.length > remainingSlots) {
+      validationMessage = 'You can attach up to 5 images.'
+    }
+
+    const validFiles = selectedFiles.slice(0, remainingSlots).filter((file) => {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        validationMessage = 'Choose JPG, PNG, or WebP images.'
+        return false
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        validationMessage = 'Each image must be 8 MB or smaller.'
+        return false
+      }
+      return true
+    })
+
+    setAttachments((current) => [
+      ...current,
+      ...validFiles.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      })),
+    ])
+    setSubmitError(validationMessage)
+  }
+
+  function removeImage(index: number) {
+    setAttachments((current) => {
+      const removed = current[index]
+      if (removed) URL.revokeObjectURL(removed.preview)
+      return current.filter((_, itemIndex) => itemIndex !== index)
+    })
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitError('')
@@ -77,6 +126,9 @@ function ReportIncident() {
     setIsSubmitting(true)
 
     try {
+      const mediaRefs = await Promise.all(
+        attachments.map(({ file }) => uploadReportImage(file)),
+      )
       const result = await createIncidentReport({
         campusId: user?.campusId ?? undefined,
         category,
@@ -85,7 +137,10 @@ function ReportIncident() {
         latitude: coordinates[0],
         longitude: coordinates[1],
         isAnonymous: identity === 'private',
+        mediaRefs,
       })
+
+      attachments.forEach(({ preview }) => URL.revokeObjectURL(preview))
 
       setReference(
         `ALU-${result.reportId.slice(0, 8).toUpperCase()}`
@@ -239,6 +294,36 @@ function ReportIncident() {
             Selected coordinates: {coordinates[0].toFixed(5)},{' '}
             {coordinates[1].toFixed(5)}
           </small>
+        </div>
+
+        <div className="report-field">
+          <label htmlFor="incident-images">Add photos (optional)</label>
+          <input
+            id="incident-images"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            onChange={handleImageSelection}
+            disabled={isSubmitting || attachments.length >= 5}
+          />
+          <small>Attach up to 5 JPG, PNG, or WebP images, 8 MB each.</small>
+          {attachments.length > 0 && (
+            <div className="report-image-list">
+              {attachments.map(({ file, preview }, index) => (
+                <div className="report-image-item" key={`${file.name}-${index}`}>
+                  <img src={preview} alt={`Selected attachment ${index + 1}`} />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    disabled={isSubmitting}
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <fieldset className="report-identity">

@@ -19,6 +19,7 @@ const createNotificationRouter = require("./routes/notification.route");
 const createNotificationFeedRouter = require("./routes/notificationFeed.route");
 const createMapRouter = require("./routes/map.route");
 const createModerationRouter = require("./routes/moderation.route");
+const createUploadRouter = require("./routes/upload.route");
 const {
   authenticate,
   verifyFirebaseUser,
@@ -144,6 +145,7 @@ app.get(
 );
 
 app.use("/devices", createDeviceRouter({ authenticate }));
+app.use("/uploads", createUploadRouter({ authenticate }));
 app.use(
   "/incidents",
   createIncidentRouter({ authenticate, optionalAuth })

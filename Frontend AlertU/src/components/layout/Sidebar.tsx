@@ -3,6 +3,7 @@ import './Sidebar.css'
 
 const navigationItems = [
   { label: 'Campus Pulse', path: '/dashboard', icon: '⌂' },
+  { label: 'Posts', path: '/posts', icon: '▤' },
   { label: 'Campus Map', path: '/map', icon: '◎' },
   { label: 'Report Incident', path: '/report', icon: '+' },
   { label: 'Saved Incidents', path: '/saved', icon: '☆' },

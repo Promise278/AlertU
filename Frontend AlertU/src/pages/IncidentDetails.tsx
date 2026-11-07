@@ -117,6 +117,24 @@ function IncidentDetails() {
 
         <h1>{incident.title}</h1>
 
+        {incident.mediaRefs.length > 0 && (
+          <section className="incident-details-photos" aria-label="Report photos">
+            <h2>Attached photos</h2>
+            <div>
+              {incident.mediaRefs.map((imageUrl, index) => (
+                <a
+                  href={imageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  key={imageUrl}
+                >
+                  <img src={imageUrl} alt={`Incident attachment ${index + 1}`} />
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
         {incident.description && (
           <p className="incident-details-summary">
             {incident.description}
