@@ -1,7 +1,7 @@
 import { Link, Navigate } from 'react-router-dom'
 
 import logo from '../assets/alertu-header-logo-transparent.png'
-import heroImage from '../assets/hero.png'
+import heroImage from '../assets/campus-safety-hero.svg'
 import { useAuth } from '../context/auth-context'
 
 import './Landing.css'

@@ -18,11 +18,17 @@ const dialectOptions = useSsl
     }
   : {};
 
-const envVar = process.env.DATABASE_URL
-  ? 'DATABASE_URL'
-  : process.env.DB_URL
-    ? 'DB_URL'
-    : null;
+const hasDiscreteDatabase = Boolean(
+  process.env.DB_NAME && process.env.DB_USER && process.env.DB_HOST
+);
+
+const envVar = hasDiscreteDatabase
+  ? null
+  : process.env.DATABASE_URL
+    ? 'DATABASE_URL'
+    : process.env.DB_URL
+      ? 'DB_URL'
+      : null;
 
 const common = {
   dialect: 'postgres',
@@ -56,6 +62,10 @@ const discreteConfig = {
 };
 
 module.exports = {
-  development: urlConfig || discreteConfig,
-  production: urlConfig || discreteConfig,
+  development: hasDiscreteDatabase
+    ? discreteConfig
+    : urlConfig || discreteConfig,
+  production: hasDiscreteDatabase
+    ? discreteConfig
+    : urlConfig || discreteConfig,
 };

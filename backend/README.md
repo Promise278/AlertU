@@ -61,7 +61,7 @@ Copy `.env.example` to `.env`. Never commit `.env`; it is ignored by Git.
 
 ### Database
 
-Use either `DATABASE_URL` or the discrete `DB_*` values. `DATABASE_URL` wins when both are set, except that `DB_NAME` overrides the database name in the URL. Keep `DB_NAME=defaultdb` to prevent accidentally connecting to a different database.
+Use either `DATABASE_URL` or the discrete `DB_*` values. When `DB_NAME`, `DB_USER`, and `DB_HOST` are all set, the discrete settings take precedence over `DATABASE_URL`; this ensures the configured host and port are used. Keep `DB_NAME=defaultdb` for the Aiven database. If the discrete settings are incomplete, `DATABASE_URL` is used and its database path is normalized to `DB_NAME` (or `defaultdb`).
 
 - Local PostgreSQL: usually `DB_SSL=false`.
 - Hosted PostgreSQL (for example Aiven): set `DB_SSL=true`.
