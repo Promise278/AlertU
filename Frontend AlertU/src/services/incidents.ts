@@ -26,6 +26,7 @@ interface ApiIncident {
   affectedRadiusMeters: number
   reportCount: number
   createdAt: string | null
+  mediaRefs?: string[]
   timeline?: ApiTimelineEntry[]
 }
 
@@ -199,6 +200,7 @@ export async function fetchIncident(
 
   return {
     ...mapIncident(response.data),
+    mediaRefs: response.data.mediaRefs ?? [],
     timeline: (response.data.timeline ?? []).map(mapTimelineEntry),
   }
 }

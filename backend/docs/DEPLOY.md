@@ -74,9 +74,14 @@ Optional:
 ```dotenv
 CORS_ORIGIN=https://your-web-app.example.com   # only for a browser client
 DB_SSL=true                                    # already the default
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 When all of `DB_NAME`, `DB_USER`, and `DB_HOST` are set, those discrete values take precedence over `DATABASE_URL`, including the host and port. Keep `DB_NAME=defaultdb` and set `DB_HOST`/`DB_PORT` to the intended Aiven endpoint. If the discrete connection values are incomplete, the backend uses `DATABASE_URL` and normalizes its database path to `DB_NAME` (or `defaultdb`).
+
+Set the Cloudinary values to enable report photo uploads. Keep the API secret in the backend environment; it is used only to sign uploads for authenticated users.
 
 `GOOGLE_APPLICATION_CREDENTIALS` also works if the host lets you mount the
 service-account file, but `FIREBASE_SERVICE_ACCOUNT_JSON` is easier on Render.

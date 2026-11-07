@@ -169,7 +169,7 @@ All responses use an envelope: `{ "data": ... }`, plus pagination `meta` where r
 - Sequelize parameterized queries; no raw string interpolation of user input.
 - Pino redacts authorization/cookie/token/password/connection-string fields.
 - Public incident coordinates are rounded to three decimals; exact incident coordinates require authentication. Reports and reporter identity are restricted to the owner or a moderator.
-- Media are HTTPS URL references. This API does not accept binary uploads; add an object-storage service before accepting files.
+- Report photos upload directly to Cloudinary using signed requests. The API stores their HTTPS URLs in `reports.mediaRefs`.
 
 ## Deployment checklist
 

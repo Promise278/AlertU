@@ -3,6 +3,7 @@ import './BottomNav.css'
 
 const mobileItems = [
   { label: 'Home', path: '/dashboard', icon: '⌂' },
+  { label: 'Posts', path: '/posts', icon: '▤' },
   { label: 'Map', path: '/map', icon: '◎' },
   { label: 'Report', path: '/report', icon: '+' },
   { label: 'Saved', path: '/saved', icon: '☆' },

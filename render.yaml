@@ -27,6 +27,12 @@ services:
         generateValue: true
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       # Comma-separated browser origin(s) for the web frontend.
       - key: CORS_ORIGIN
         value: https://alertu-frontend.vercel.app

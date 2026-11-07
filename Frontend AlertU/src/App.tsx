@@ -10,6 +10,7 @@ import AppLayout from './components/layout/AppLayout'
 
 import Landing from './pages/Landing'
 import CampusPulse from './pages/CampusPulse'
+import Posts from './pages/Posts'
 import CampusMapPage from './pages/CampusMap'
 import IncidentDetails from './pages/IncidentDetails'
 import ReportIncident from './pages/ReportIncident'
@@ -44,6 +45,8 @@ function App() {
           <Route element={<AppLayout />}>
 
             <Route path="/dashboard" element={<CampusPulse />} />
+
+            <Route path="/posts" element={<Posts />} />
 
             <Route path="/map" element={<CampusMapPage />} />
 

@@ -57,6 +57,7 @@ export interface IncidentTimelineEntry {
 
 export interface IncidentDetail extends Incident {
   timeline: IncidentTimelineEntry[]
+  mediaRefs: string[]
 }
 
 export interface CreateReportInput {
