@@ -1,0 +1,552 @@
+openapi: 3.0.3
+info:
+  title: AlertU API (Live)
+  version: 1.0.0
+  description: |
+    This contract documents the AlertU backend routes. Health, identity, and
+    device endpoints are described in full here; incident, report, post,
+    notification, map, and moderation routes are mounted in backend/index.js
+    and their detailed request/response contracts are documented in
+    docs/API.md. The hosted production backend must be redeployed from the
+    current revision before those routes are available at the production URL.
+
+    Protected endpoints require a Firebase ID token:
+
+        Authorization: Bearer <firebase-id-token>
+servers:
+  - url: https://alertu.onrender.com
+    description: Production
+  - url: http://localhost:5000
+    description: Local development
+tags:
+  - name: Health
+  - name: Identity
+  - name: Devices
+  - name: Legacy Auth
+paths:
+  /:
+    get:
+      tags: [Health]
+      summary: API metadata
+      security: []
+      responses:
+        '200':
+          description: API banner
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Welcome to AlertU API
+  /health:
+    get:
+      tags: [Health]
+      summary: Readiness and database health
+      security: []
+      responses:
+        '200':
+          description: Database reachable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+  /health/live:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      security: []
+      responses:
+        '200':
+          description: Process is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+  /me/exists:
+    get:
+      tags: [Identity]
+      summary: Check whether the authenticated Firebase user is registered
+      description: |
+        Returns whether an AlertU account already exists for the Firebase user
+        without creating one. When the Firebase email is verified, an existing
+        account with the same email is linked to the Firebase UID.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Registration check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    required: [exists]
+                    properties:
+                      exists:
+                        type: boolean
+                      user:
+                        $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          description: Firebase Admin is not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /me:
+    get:
+      tags: [Identity]
+      summary: Get the authenticated profile
+      description: |
+        Creates the local student account on first use and returns the profile.
+        The response field is `name` (not `displayName`).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Account is not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Firebase Admin is not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /devices:
+    get:
+      tags: [Devices]
+      summary: List the caller's active push devices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active devices (raw tokens are not returned)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /devices/push-token:
+    post:
+      tags: [Devices]
+      summary: Register or refresh an FCM device token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, platform]
+              properties:
+                token:
+                  type: string
+                  minLength: 20
+                  maxLength: 4096
+                  description: FCM device token from getDevicePushTokenAsync().
+                platform:
+                  type: string
+                  enum: [android, ios, web]
+                appVersion:
+                  type: string
+                  maxLength: 32
+                  nullable: true
+      responses:
+        '200':
+          description: Existing token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Device'
+        '201':
+          description: Token registered for the first time
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Device'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+    delete:
+      tags: [Devices]
+      summary: Deactivate an FCM device token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '204':
+          description: Token deactivated (also returned when not found)
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/register:
+    post:
+      tags: [Legacy Auth]
+      summary: Legacy email/password registration
+      deprecated: true
+      description: Do not use in the Firebase mobile app.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password, role]
+              properties:
+                username:
+                  type: string
+                  minLength: 4
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 5
+                role:
+                  type: string
+                  enum: [sharer, supporter]
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                  message:
+                    type: string
+        '400':
+          description: Validation or duplicate email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '429':
+          $ref: '#/components/responses/LegacyRateLimited'
+  /auth/login:
+    post:
+      tags: [Legacy Auth]
+      summary: Legacy email/password login
+      deprecated: true
+      description: Returns an 8-hour JWT. This is not a Firebase ID token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      username:
+                        type: string
+                      email:
+                        type: string
+                      roles:
+                        type: string
+                      time:
+                        type: integer
+                  message:
+                    type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '429':
+          $ref: '#/components/responses/LegacyRateLimited'
+  /auth/seesupporters:
+    get:
+      tags: [Legacy Auth]
+      summary: Legacy supporter list
+      deprecated: true
+      security:
+        - legacyJwt: []
+      responses:
+        '200':
+          description: Supporters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        username:
+                          type: string
+                        email:
+                          type: string
+                  message:
+                    type: string
+        '401':
+          description: Missing or invalid legacy JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+    legacyJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT from /auth/login (legacy)
+  responses:
+    Unauthorized:
+      description: Missing or invalid Firebase ID token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LegacyRateLimited:
+      description: Legacy auth rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+              message:
+                type: string
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: AUTH_REQUIRED
+            message:
+              type: string
+            details:
+              nullable: true
+        requestId:
+          type: string
+          example: 0f9f4c4e-0e6d-4db2-a1f4-0c8c6be0bd28
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        timestamp:
+          type: string
+          format: date-time
+        uptimeSeconds:
+          type: integer
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [up, down]
+            latencyMs:
+              type: integer
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [student, moderator, admin]
+        campusId:
+          type: string
+          format: uuid
+          nullable: true
+        accountStatus:
+          type: string
+          enum: [active, suspended, deactivated]
+        campus:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        platform:
+          type: string
+          enum: [android, ios, web]
+        appVersion:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        lastSeenAt:
+          type: string
+          format: date-time
+          nullable: true
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrevious:
+          type: boolean

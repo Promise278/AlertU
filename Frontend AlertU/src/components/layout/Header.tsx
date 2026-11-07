@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { useAuth } from '../../context/AuthContext'
-import { getUnreadNotificationCount } from '../../services/notifications'
+import { useAuth } from '../../context/auth-context'
+import {
+  countUnreadNotifications,
+  fetchNotifications,
+  subscribeToNotificationChanges,
+} from '../../services/notifications'
 
 import alertuLogo from '../../assets/alertu-header-logo-transparent.png'
 import './Header.css'
@@ -10,30 +14,38 @@ import './Header.css'
 function Header() {
   const [campusExpanded, setCampusExpanded] = useState(false)
 
-  const { user, isAuthenticated } = useAuth()
+  const { user } = useAuth()
 
-  const [unreadCount, setUnreadCount] = useState(
-    getUnreadNotificationCount
-  )
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
+    let active = true
+
     function updateUnreadCount() {
-      setUnreadCount(getUnreadNotificationCount())
+      fetchNotifications()
+        .then((notifications) => {
+          if (active) {
+            setUnreadCount(
+              countUnreadNotifications(notifications),
+            )
+          }
+        })
+        .catch(() => {
+          if (active) setUnreadCount(0)
+        })
     }
 
-    window.addEventListener(
-      'alertu-notifications-updated',
-      updateUnreadCount
+    updateUnreadCount()
+
+    const unsubscribe = subscribeToNotificationChanges(
+      updateUnreadCount,
     )
 
     window.addEventListener('storage', updateUnreadCount)
 
     return () => {
-      window.removeEventListener(
-        'alertu-notifications-updated',
-        updateUnreadCount
-      )
-
+      active = false
+      unsubscribe()
       window.removeEventListener('storage', updateUnreadCount)
     }
   }, [])
@@ -66,7 +78,7 @@ function Header() {
           <span className="campus-label">YOUR CAMPUS</span>
 
           <span className="campus-name">
-            Campus not assigned
+            {user?.campusName || 'Campus not assigned'}
           </span>
 
           <svg
@@ -89,7 +101,9 @@ function Header() {
 
         {campusExpanded && (
           <div className="campus-expanded-info">
-            Your campus has not been assigned yet.
+            {user?.campusName
+              ? `You are signed in to ${user.campusName}.`
+              : 'Your campus has not been assigned yet.'}
           </div>
         )}
       </div>
@@ -97,56 +111,42 @@ function Header() {
       {/* Header actions */}
       <div className="header-actions">
 
-        <span className="demo-indicator">
-          DEMO MODE
-        </span>
+        <Link
+          to="/notifications"
+          className="header-icon-button"
+          aria-label={`Notifications, ${unreadCount} unread`}
+          title="Notifications"
+        >
+          <svg
+            width="21"
+            height="21"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+            <path d="M10 21h4" />
+          </svg>
 
-        {!isAuthenticated ? (
-          <div className="header-auth-links">
-  <Link to="/login">
-    Sign in
-  </Link>
-</div>
-        ) : (
-          <>
-            <Link
-              to="/notifications"
-              className="header-icon-button"
-              aria-label={`Notifications, ${unreadCount} unread`}
-              title="Notifications"
-            >
-              <svg
-                width="21"
-                height="21"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                <path d="M10 21h4" />
-              </svg>
+          {unreadCount > 0 && (
+            <span className="notification-count">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Link>
 
-              {unreadCount > 0 && (
-                <span className="notification-count">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </Link>
-
-            <Link
-              to="/profile"
-              className="header-avatar"
-              aria-label="Open student profile"
-              title={user?.displayName || 'Profile'}
-            >
-              {avatarInitial}
-            </Link>
-          </>
-        )}
+        <Link
+          to="/profile"
+          className="header-avatar"
+          aria-label="Open student profile"
+          title={user?.displayName || 'Profile'}
+        >
+          {avatarInitial}
+        </Link>
 
       </div>
     </header>

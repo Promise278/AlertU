@@ -92,14 +92,6 @@
   font-size: 12px;
 }
 
-.pulse-demo-label {
-  flex-shrink: 0;
-  color: #946200;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-
 .pulse-incident-card {
   padding: 18px;
   border: 1px solid var(--color-border);
@@ -138,6 +130,26 @@
 .pulse-status.verified {
   background: #e7f8ef;
   color: #087443;
+}
+
+.pulse-status.resolved {
+  background: #e8f1ff;
+  color: #2458a6;
+}
+
+.pulse-status.reported,
+.pulse-status.candidate,
+.pulse-status.corroborated,
+.pulse-status.reopened {
+  background: #eef2f7;
+  color: #475569;
+}
+
+.pulse-status.disputed,
+.pulse-status.rejected,
+.pulse-status.expired {
+  background: #fff1f2;
+  color: #b91c1c;
 }
 
 .pulse-incident-card h3 {

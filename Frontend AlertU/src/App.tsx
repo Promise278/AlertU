@@ -5,8 +5,10 @@ import {
   Route,
 } from 'react-router-dom'
 
+import RequireAuth from './components/auth/RequireAuth'
 import AppLayout from './components/layout/AppLayout'
 
+import Landing from './pages/Landing'
 import CampusPulse from './pages/CampusPulse'
 import CampusMapPage from './pages/CampusMap'
 import IncidentDetails from './pages/IncidentDetails'
@@ -17,6 +19,7 @@ import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 
 import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
 
 import './pages/auth/Auth.css'
 
@@ -25,36 +28,44 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* Unified authentication route */}
+        <Route path="/" element={<Landing />} />
 
         <Route
           path="/login"
           element={<Login />}
         />
 
-        {/* Main application routes */}
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
-        <Route element={<AppLayout />}>
+        <Route element={<RequireAuth />}>
+          <Route element={<AppLayout />}>
 
-          <Route path="/" element={<CampusPulse />} />
+            <Route path="/dashboard" element={<CampusPulse />} />
 
-          <Route path="/map" element={<CampusMapPage />} />
+            <Route path="/map" element={<CampusMapPage />} />
 
-          <Route path="/report" element={<ReportIncident />} />
+            <Route path="/report" element={<ReportIncident />} />
 
-          <Route path="/saved" element={<SavedIncidents />} />
+            <Route path="/saved" element={<SavedIncidents />} />
 
-          <Route path="/notifications" element={<Notifications />} />
+            <Route
+              path="/notifications"
+              element={<Notifications />}
+            />
 
-          <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<Profile />} />
 
-          <Route path="/settings" element={<Settings />} />
+            <Route path="/settings" element={<Settings />} />
 
-          <Route
-            path="/incidents/:id"
-            element={<IncidentDetails />}
-          />
+            <Route
+              path="/incidents/:id"
+              element={<IncidentDetails />}
+            />
 
+          </Route>
         </Route>
 
       </Routes>

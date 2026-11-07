@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const { Sequelize } = require("sequelize");
+const { normalizeDatabaseUrl } = require("./databaseUrl");
 
 const useSsl = process.env.DB_SSL !== "false";
 const rejectUnauthorized =
@@ -31,7 +32,9 @@ const options = {
     : {}),
 };
 
-const databaseUrl = process.env.DATABASE_URL || process.env.DB_URL;
+const databaseUrl = normalizeDatabaseUrl(
+  process.env.DATABASE_URL || process.env.DB_URL
+);
 
 const connection = databaseUrl
   ? new Sequelize(databaseUrl, options)

@@ -19,7 +19,7 @@ Professional campus-safety REST API for the AlertU Expo app. Built with Node.js,
 - Google Maps geocoding and reverse geocoding endpoints (server-side key only).
 - Zod request validation, centralized errors, request IDs, Pino logging with redaction.
 - Helmet, explicit CORS allow-list, JSON body limits, and endpoint-specific rate limits.
-- Official Sequelize CLI migrations and a demo-campus seed.
+- Official Sequelize CLI migrations and a default-campus seed.
 
 ## Requirements
 
@@ -61,7 +61,7 @@ Copy `.env.example` to `.env`. Never commit `.env`; it is ignored by Git.
 
 ### Database
 
-Use either `DATABASE_URL` or the discrete `DB_*` values. `DATABASE_URL` wins when both are set.
+Use either `DATABASE_URL` or the discrete `DB_*` values. `DATABASE_URL` wins when both are set, except that `DB_NAME` overrides the database name in the URL. Keep `DB_NAME=defaultdb` to prevent accidentally connecting to a different database.
 
 - Local PostgreSQL: usually `DB_SSL=false`.
 - Hosted PostgreSQL (for example Aiven): set `DB_SSL=true`.
@@ -110,13 +110,13 @@ Notification events are written to `notification_events` in the same transaction
 ```bash
 npm run db:migrate          # apply all pending migrations
 npm run db:migrate:undo     # undo the most recent migration
-npm run db:seed             # insert the demo campus (idempotent)
+npm run db:seed             # insert the default campus (idempotent)
 npm run db:reset            # undo all, migrate, seed (development only)
 ```
 
 Migrations are additive and official (`sequelize-cli`). The baseline replaced an old, never-applied integer-ID scaffold after the target database was verified empty. Do not edit a migration that has already run in a shared environment; add a new one.
 
-The seed creates `AlertU Demo Campus` with a fixed UUID. The mobile app can use its `campusId` until real campus onboarding exists.
+The seed creates `AlertU Campus` with a fixed UUID. The mobile app can use its `campusId` until real campus onboarding exists.
 
 ## Roles
 
@@ -207,7 +207,7 @@ backend/
 ├── models/                # Sequelize models and associations
 ├── routes/                # route wiring
 ├── scripts/               # role/bootstrap, expiry, notification retry
-├── seeders/               # demo campus seed
+├── seeders/               # default campus seed
 ├── service/               # domain, moderation, posts, maps, push, notifications
 ├── util/                  # errors, async wrapper, serializers, pagination
 ├── validator/             # Zod request schemas

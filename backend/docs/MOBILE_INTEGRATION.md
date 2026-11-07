@@ -1,5 +1,7 @@
 # Connecting the Expo App to the AlertU API
 
+> **Outdated (2026-11-03):** this document describes the earlier local/dev-auth setup and mock-data screens. The current app uses Firebase Google Sign-In and the hosted backend at `https://alertu.onrender.com`. For the current, frontend-ready contract, use [`FRONTEND_API_GUIDE.md`](FRONTEND_API_GUIDE.md) and [`openapi.live.yaml`](openapi.live.yaml).
+
 The Expo app in `../mobile` is wired to this API for authentication, profiles, reports, incidents, map markers, campus posts, likes, comments, and profile statistics. This guide covers the local setup, what is implemented, and what still needs production credentials.
 
 > **Not live-configured:** Firebase Auth/FCM, Google Maps geocoding, a live map renderer, push registration, and photo uploads. The local development token path lets you test the rest of the app without Firebase credentials.
@@ -131,7 +133,7 @@ Notes:
 - Likes update optimistically, then use the server's `liked` and `likeCount`; failures roll back the UI and show an alert.
 - The comments list is oldest-first and capped at 50 by the API validator.
 - Report category labels map to API values: Safety → `safety`, Harassment → `harassment`, Theft → `theft`, Vandalism → `vandalism`, Other → `other`.
-- Report locations use demo-campus coordinates in `report.tsx`. Replace them with a real campus location directory when one exists.
+- Report locations use static campus coordinates in `report.tsx`. Replace them with a real campus location directory when one exists.
 - The photo picker keeps local previews but does not send `mediaRefs`; the API only accepts HTTPS media references after a real upload.
 - The incident screen shows the real status, public summary, report count, timeline, and related incidents.
 - The map uses the existing static campus image with incident markers positioned from coordinates. It is not a live map SDK yet.

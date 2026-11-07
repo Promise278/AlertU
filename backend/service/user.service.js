@@ -44,6 +44,50 @@ const withCampus = (userId) =>
     include: [{ model: Campus, as: 'campus' }],
   });
 
+const toPublicProfile = (user) => ({
+  id: user.id,
+  name: user.displayName,
+  email: user.email,
+  role: user.role,
+  campusId: user.campusId,
+  accountStatus: user.accountStatus,
+  campus: user.campus
+    ? { id: user.campus.id, name: user.campus.name }
+    : null,
+});
+
+const findExistingUser = async (decoded) => {
+  if (!decoded || !decoded.uid) {
+    throw AppError.unauthorized('Invalid authentication token', 'INVALID_TOKEN');
+  }
+
+  let user = await User.findOne({
+    where: { firebaseUid: decoded.uid },
+    include: [{ model: Campus, as: 'campus' }],
+  });
+
+  if (user) return user;
+
+  const email = safeEmail(decoded.email);
+  if (!email || !decoded.email_verified) return null;
+
+  user = await User.findOne({
+    where: { email },
+    include: [{ model: Campus, as: 'campus' }],
+  });
+
+  if (!user) return null;
+
+  if (!user.firebaseUid) {
+    await user.update({
+      firebaseUid: decoded.uid,
+      lastSeenAt: new Date(),
+    });
+  }
+
+  return user;
+};
+
 const resolveFromFirebase = async (decoded) => {
   if (!decoded || !decoded.uid) {
     throw AppError.unauthorized('Invalid authentication token', 'INVALID_TOKEN');
@@ -53,6 +97,33 @@ const resolveFromFirebase = async (decoded) => {
     where: { firebaseUid: decoded.uid },
     include: [{ model: Campus, as: 'campus' }],
   });
+
+  if (!user) {
+    const email = safeEmail(decoded.email);
+
+    if (email) {
+      user = await User.findOne({
+        where: { email },
+        include: [{ model: Campus, as: 'campus' }],
+      });
+
+      if (user) {
+        if (!decoded.email_verified) {
+          throw AppError.conflict(
+            'An account with this email already exists. Sign in with the method you registered with.',
+            'ACCOUNT_EXISTS'
+          );
+        }
+
+        if (!user.firebaseUid) {
+          await user.update({
+            firebaseUid: decoded.uid,
+            lastSeenAt: new Date(),
+          });
+        }
+      }
+    }
+  }
 
   if (!user) {
     const email = safeEmail(decoded.email);
@@ -186,6 +257,8 @@ const setRole = async ({ identifier, role }) => {
 module.exports = {
   resolveFromFirebase,
   resolveDevUser,
+  findExistingUser,
+  toPublicProfile,
   getProfile,
   setRole,
   findDefaultCampusId,

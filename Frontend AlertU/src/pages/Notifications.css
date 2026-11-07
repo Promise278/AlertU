@@ -129,13 +129,6 @@
   padding: 0;
 }
 
-.notifications-demo-notice {
-  margin-top: 18px;
-  color: #64748b;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
 @media (max-width: 767px) {
   .notifications-heading {
     align-items: flex-start;

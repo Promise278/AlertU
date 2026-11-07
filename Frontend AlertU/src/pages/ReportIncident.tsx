@@ -1,78 +1,44 @@
-
-import { useState } from 'react'
+import {
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from 'react'
 import { Link } from 'react-router-dom'
 
-import { createIncident } from '../services/incidentStore'
+import { useAuth } from '../context/auth-context'
+import {
+  createIncidentReport,
+  INCIDENT_CATEGORIES,
+  INCIDENT_CATEGORY_LABELS,
+} from '../services/incidents'
+import type { IncidentCategory } from '../types/incident'
 import LocationPicker from '../components/map/LocationPicker'
 import { campusLocations } from '../data/campusLocations'
-import { DEFAULT_CAMPUS } from '../data/campus'
 
 import './ReportIncident.css'
 
 function ReportIncident() {
-  const [category, setCategory] = useState('')
+  const { user } = useAuth()
+
+  const [category, setCategory] = useState<IncidentCategory | ''>('')
   const [description, setDescription] = useState('')
   const [location, setLocation] = useState('')
-  const [identity, setIdentity] = useState('')
+  const [identity, setIdentity] = useState<
+    'identified' | 'private' | ''
+  >('')
+
   const [reference, setReference] = useState('')
+  const [incidentId, setIncidentId] = useState('')
 
   const [coordinates, setCoordinates] = useState<[number, number]>(
     [6.24858, 7.11545]
   )
 
-  const [photos, setPhotos] = useState<File[]>([])
-  const [photoError, setPhotoError] = useState('')
-
-  function handlePhotoChange(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const selectedFiles = Array.from(event.target.files || [])
-
-    if (photos.length + selectedFiles.length > 3) {
-      setPhotoError('You can upload a maximum of 3 photos.')
-      event.target.value = ''
-      return
-    }
-
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    ]
-
-    for (const file of selectedFiles) {
-      if (!allowedTypes.includes(file.type)) {
-        setPhotoError('Only JPG, PNG and WebP images are allowed.')
-        event.target.value = ''
-        return
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        setPhotoError('Each photo must be 5MB or smaller.')
-        event.target.value = ''
-        return
-      }
-    }
-
-    setPhotos((currentPhotos) => [
-      ...currentPhotos,
-      ...selectedFiles,
-    ])
-
-    setPhotoError('')
-    event.target.value = ''
-  }
-
-  function removePhoto(index: number) {
-    setPhotos((currentPhotos) =>
-      currentPhotos.filter((_, photoIndex) => photoIndex !== index)
-    )
-
-    setPhotoError('')
-  }
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   function handlePresetLocationChange(
-    event: React.ChangeEvent<HTMLSelectElement>
+    event: ChangeEvent<HTMLSelectElement>
   ) {
     const selectedLocation = campusLocations.find(
       (item) => item.name === event.target.value
@@ -94,26 +60,46 @@ function ReportIncident() {
     )
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setSubmitError('')
 
-    const incidentReference = `ALU-${Date.now().toString().slice(-6)}`
+    if (!category) {
+      setSubmitError('Select an incident category.')
+      return
+    }
 
-    createIncident({
-      reference: incidentReference,
-      category,
-      status: 'Under review',
-      title: `${category} incident`,
-      description,
-      location,
-      coordinates,
-      time: 'Just now',
-      createdAt: new Date().toISOString(),
-      identity: identity as 'identified' | 'private',
-      campusId: DEFAULT_CAMPUS.id,
-    })
+    if (!identity) {
+      setSubmitError('Choose how your identity should appear.')
+      return
+    }
 
-    setReference(incidentReference)
+    setIsSubmitting(true)
+
+    try {
+      const result = await createIncidentReport({
+        campusId: user?.campusId ?? undefined,
+        category,
+        description,
+        locationName: location,
+        latitude: coordinates[0],
+        longitude: coordinates[1],
+        isAnonymous: identity === 'private',
+      })
+
+      setReference(
+        `ALU-${result.reportId.slice(0, 8).toUpperCase()}`
+      )
+      setIncidentId(result.incidentId)
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : 'Could not submit your report. Please try again.'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (reference) {
@@ -125,7 +111,7 @@ function ReportIncident() {
           <h1>Report received</h1>
 
           <p>
-            Your demonstration report has been recorded in this session.
+            Your report has been sent to campus authorities for review.
           </p>
 
           <div className="report-reference">
@@ -138,13 +124,18 @@ function ReportIncident() {
             Reports require review before they can be verified.
           </p>
 
-          <p className="report-demo-notice">
-            Demo mode: this report has not been sent to campus authorities.
-          </p>
-
-          <Link to="/" className="report-submit-button">
+          <Link to="/dashboard" className="report-submit-button">
             Return to Campus Pulse
           </Link>
+
+          {incidentId && (
+            <Link
+              to={`/incidents/${incidentId}`}
+              className="report-success-link"
+            >
+              View incident
+            </Link>
+          )}
         </div>
       </div>
     )
@@ -161,6 +152,12 @@ function ReportIncident() {
       </div>
 
       <form className="report-form" onSubmit={handleSubmit}>
+        {submitError && (
+          <p className="report-error" role="alert">
+            {submitError}
+          </p>
+        )}
+
         <div className="report-field">
           <label htmlFor="incident-category">
             Incident category *
@@ -169,14 +166,18 @@ function ReportIncident() {
           <select
             id="incident-category"
             value={category}
-            onChange={(event) => setCategory(event.target.value)}
+            onChange={(event) =>
+              setCategory(event.target.value as IncidentCategory | '')
+            }
+            disabled={isSubmitting}
             required
           >
             <option value="">Select a category</option>
-            <option value="Security">Security</option>
-            <option value="Facilities">Facilities</option>
-            <option value="Harassment">Harassment</option>
-            <option value="Other">Other</option>
+            {INCIDENT_CATEGORIES.map((value) => (
+              <option key={value} value={value}>
+                {INCIDENT_CATEGORY_LABELS[value]}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -191,6 +192,8 @@ function ReportIncident() {
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Describe what happened..."
             rows={5}
+            minLength={5}
+            disabled={isSubmitting}
             required
           />
         </div>
@@ -206,6 +209,7 @@ function ReportIncident() {
               (item) => item.name === location
             ) ? location : ''}
             onChange={handlePresetLocationChange}
+            disabled={isSubmitting}
           >
             <option value="">Choose a campus location</option>
 
@@ -222,6 +226,7 @@ function ReportIncident() {
             value={location}
             onChange={(event) => setLocation(event.target.value)}
             placeholder="Or enter the location manually"
+            disabled={isSubmitting}
             required
           />
 
@@ -236,48 +241,6 @@ function ReportIncident() {
           </small>
         </div>
 
-        <div className="report-field">
-          <label htmlFor="incident-photos">
-            Evidence photos (optional)
-          </label>
-
-          <input
-            id="incident-photos"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            onChange={handlePhotoChange}
-          />
-
-          <small>
-            Maximum 3 photos. Each photo must be 5MB or smaller.
-          </small>
-
-          {photoError && (
-            <p className="report-error">{photoError}</p>
-          )}
-
-          {photos.length > 0 && (
-            <div className="report-photo-list">
-              {photos.map((photo, index) => (
-                <div
-                  className="report-photo-item"
-                  key={`${photo.name}-${index}`}
-                >
-                  <span>{photo.name}</span>
-
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(index)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         <fieldset className="report-identity">
           <legend>How should your identity appear? *</legend>
 
@@ -287,7 +250,10 @@ function ReportIncident() {
               name="identity"
               value="identified"
               checked={identity === 'identified'}
-              onChange={(event) => setIdentity(event.target.value)}
+              onChange={(event) =>
+                setIdentity(event.target.value as 'identified')
+              }
+              disabled={isSubmitting}
               required
             />
             Share my identity
@@ -299,14 +265,21 @@ function ReportIncident() {
               name="identity"
               value="private"
               checked={identity === 'private'}
-              onChange={(event) => setIdentity(event.target.value)}
+              onChange={(event) =>
+                setIdentity(event.target.value as 'private')
+              }
+              disabled={isSubmitting}
             />
             Keep my identity private
           </label>
         </fieldset>
 
-        <button type="submit" className="report-submit-button">
-          Submit Report
+        <button
+          type="submit"
+          className="report-submit-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Submitting report...' : 'Submit Report'}
         </button>
 
         <p className="report-form-note">

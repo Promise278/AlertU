@@ -16,6 +16,29 @@ const { pushService } = require('./push.service');
 
 const truncate = (value, max) => String(value || '').slice(0, max);
 
+const listNotifications = async ({ userId, page, limit }) => {
+  const { rows, count } = await NotificationEvent.findAndCountAll({
+    where: { recipientUserId: userId },
+    order: [['createdAt', 'DESC']],
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  return {
+    notifications: rows.map((event) => ({
+      id: event.id,
+      type: event.eventType,
+      title: event.payload?.title || 'AlertU update',
+      message: event.payload?.body || '',
+      data: event.payload?.data || {},
+      state: event.state,
+      createdAt: event.createdAt,
+      sentAt: event.sentAt,
+    })),
+    total: count,
+  };
+};
+
 const getPreferences = async (userId, transaction) => {
   const preference = await NotificationPreference.findOne({
     where: { userId },
@@ -334,6 +357,7 @@ const retryPendingEvents = async ({ limit = 100 } = {}) => {
 };
 
 module.exports = {
+  listNotifications,
   getPreferences,
   updatePreferences,
   queueIncidentStatusEvents,

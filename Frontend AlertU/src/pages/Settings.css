@@ -96,7 +96,7 @@
   outline-offset: 3px;
 }
 
-.settings-demo-notice {
+.settings-status {
   margin-top: 20px;
   padding: 14px;
   background: var(--color-background);
@@ -104,6 +104,11 @@
   color: #64748b;
   font-size: 12px;
   line-height: 1.6;
+}
+
+.settings-status-error {
+  background: #fff5f6;
+  color: #dc2626;
 }
 
 @media (max-width: 600px) {

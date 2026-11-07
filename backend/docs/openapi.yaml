@@ -3,12 +3,19 @@ info:
   title: AlertU API
   version: 1.0.0
   description: |
+    AlertU API contract. The incident, report, post, notification, map, and
+    moderation routes are mounted in `backend/index.js`; the hosted production
+    backend must be redeployed from the current revision before those routes are
+    available there. See `docs/FRONTEND_API_GUIDE.md` for deployment status.
+
     Campus-safety API for AlertU. Authenticated endpoints require a Firebase ID
     token in the `Authorization: Bearer <token>` header. The server verifies the
     token and resolves the local PostgreSQL user; roles and campus scope are
     never accepted from the client payload.
 servers:
-  - url: http://localhost:4000
+  - url: https://alertu.onrender.com
+    description: Production (mounted routes only; see docs/FRONTEND_API_GUIDE.md)
+  - url: http://localhost:5000
     description: Local development
 tags:
   - name: Health

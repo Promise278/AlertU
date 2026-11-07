@@ -131,16 +131,6 @@
   outline-offset: 3px;
 }
 
-.demo-indicator {
-  padding: 6px 9px;
-  background: #FFF4D8;
-  color: #946200;
-  border-radius: 5px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-}
-
 .header-icon-button {
   position: relative;
   width: 38px;
@@ -268,11 +258,6 @@
     width: 100%;
     margin-bottom: 10px;
     box-shadow: none;
-  }
-
-  .demo-indicator {
-    font-size: 8px;
-    padding: 5px 7px;
   }
 
   .header-icon-button {

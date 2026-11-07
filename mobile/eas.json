@@ -9,6 +9,7 @@
       "distribution": "internal",
       "environment": "development",
       "env": {
+        "EXPO_PUBLIC_API_URL": "https://alertu.onrender.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "469158474213-qqmt3gvmeb6g3r0v4pm3c2ia0mvm0ulj.apps.googleusercontent.com"
       },
       "android": {
@@ -17,12 +18,20 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://alertu.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "469158474213-qqmt3gvmeb6g3r0v4pm3c2ia0mvm0ulj.apps.googleusercontent.com"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://alertu.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "469158474213-qqmt3gvmeb6g3r0v4pm3c2ia0mvm0ulj.apps.googleusercontent.com"
+      }
     }
   },
   "submit": {

@@ -12,7 +12,18 @@ const { apiLimiter } = require("./middleware/rateLimiter");
 const authRoutes = require("./routes/auth.route");
 const createHealthRouter = require("./routes/health.route");
 const createDeviceRouter = require("./routes/device.route");
-const { authenticate } = require("./middleware/authenticate");
+const createIncidentRouter = require("./routes/incident.route");
+const createReportRouter = require("./routes/report.route");
+const createPostRouter = require("./routes/post.route");
+const createNotificationRouter = require("./routes/notification.route");
+const createNotificationFeedRouter = require("./routes/notificationFeed.route");
+const createMapRouter = require("./routes/map.route");
+const createModerationRouter = require("./routes/moderation.route");
+const {
+  authenticate,
+  verifyFirebaseUser,
+  optionalAuth,
+} = require("./middleware/authenticate");
 const { notFound, errorHandler } = require("./middleware/error.middleware");
 const asyncHandler = require("./util/asyncHandler");
 const userService = require("./service/user.service");
@@ -94,27 +105,61 @@ app.use("/health", createHealthRouter());
 app.use("/auth", authRoutes);
 
 app.get(
-  "/me",
-  authenticate,
+  "/me/exists",
+  verifyFirebaseUser,
   asyncHandler(async (req, res) => {
-    const user = await userService.getProfile(req.user.id);
+    if (req.user) {
+      res.json({
+        data: {
+          exists: true,
+          user: userService.toPublicProfile(req.user),
+        },
+      });
+      return;
+    }
+
+    const user = await userService.findExistingUser(req.firebaseUser);
+
+    if (!user) {
+      res.json({ data: { exists: false } });
+      return;
+    }
+
     res.json({
       data: {
-        id: user.id,
-        name: user.displayName,
-        email: user.email,
-        role: user.role,
-        campusId: user.campusId,
-        accountStatus: user.accountStatus,
-        campus: user.campus
-          ? { id: user.campus.id, name: user.campus.name }
-          : null,
+        exists: true,
+        user: userService.toPublicProfile(user),
       },
     });
   })
 );
 
+app.get(
+  "/me",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const user = await userService.getProfile(req.user.id);
+    res.json({ data: userService.toPublicProfile(user) });
+  })
+);
+
 app.use("/devices", createDeviceRouter({ authenticate }));
+app.use(
+  "/incidents",
+  createIncidentRouter({ authenticate, optionalAuth })
+);
+app.use("/reports", createReportRouter({ authenticate }));
+app.use("/posts", createPostRouter({ authenticate, optionalAuth }));
+app.use(
+  "/notification-preferences",
+  createNotificationRouter({ authenticate })
+);
+app.use(
+  "/notifications",
+  createNotificationFeedRouter({ authenticate })
+);
+app.use("/maps", createMapRouter({ authenticate }));
+app.use("/moderation", createModerationRouter({ authenticate }));
 
 app.use(notFound);
 app.use(errorHandler);
@@ -124,9 +169,17 @@ let server;
 
 connection
   .authenticate()
-  .then(() => {
+  .then(async () => {
+    const [databaseRows] = await connection.query(
+      "SELECT current_database() AS name"
+    );
+    const databaseName = databaseRows[0]?.name || "unknown";
+
     server = app.listen(PORT, () => {
-      logger.info({ port: PORT }, "Database connected and server running");
+      logger.info(
+        { port: PORT, database: databaseName },
+        "Database connected and server running"
+      );
     });
   })
   .catch((error) => {

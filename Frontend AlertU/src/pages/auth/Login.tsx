@@ -1,17 +1,31 @@
-
-import { useState } from 'react'
 import {
+  useEffect,
+  useState,
+  type FormEvent,
+} from 'react'
+import {
+  Link,
   useLocation,
   useNavigate,
 } from 'react-router-dom'
 
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../context/auth-context'
 
 function Login() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const { loginWithGoogle } = useAuth()
+  const {
+    loginWithGoogle,
+    loginWithEmail,
+    isAuthenticated,
+    isLoading,
+    authError,
+    clearAuthError,
+  } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -25,26 +39,64 @@ function Login() {
     } | null
   )?.from
 
-  const handleGoogleSignIn = async () => {
+  const destination = from
+    ? `${from.pathname ?? '/dashboard'}${from.search ?? ''}${from.hash ?? ''}`
+    : '/dashboard'
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate(destination, { replace: true })
+    }
+  }, [destination, isAuthenticated, isLoading, navigate])
+
+  const handleEmailSignIn = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault()
     setError('')
+    clearAuthError()
+
+    if (!email.trim() || !password) {
+      setError('Enter your email and password.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      await loginWithGoogle()
-
-      const destination = from
-        ? `${from.pathname ?? '/'}${from.search ?? ''}${from.hash ?? ''}`
-        : '/'
-
+      await loginWithEmail(email, password)
       navigate(destination, { replace: true })
-    } catch {
+    } catch (signInError) {
       setError(
-        'Google sign-in was unsuccessful. Please try again.'
+        signInError instanceof Error
+          ? signInError.message
+          : 'Sign-in failed. Please try again.',
       )
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  const handleGoogleSignIn = async () => {
+    setError('')
+    clearAuthError()
+    setIsSubmitting(true)
+
+    try {
+      await loginWithGoogle()
+      navigate(destination, { replace: true })
+    } catch (signInError) {
+      setError(
+        signInError instanceof Error
+          ? signInError.message
+          : 'Google sign-in was unsuccessful. Please try again.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const displayedError = error || authError
 
   return (
     <div className="auth-page">
@@ -53,16 +105,104 @@ function Login() {
         <div className="auth-header">
           <h1>Welcome to AlertU</h1>
           <p>
-            Sign in or create an account to access your
-            campus safety features.
+            Sign in to report incidents, follow campus updates,
+            and receive alerts.
           </p>
         </div>
 
-        {error && (
+        {displayedError && (
           <p role="alert" className="auth-error">
-            {error}
+            {displayedError}
           </p>
         )}
+
+        <form className="auth-form" onSubmit={handleEmailSignIn}>
+
+          <div className="auth-field">
+            <label htmlFor="login-email">Email address</label>
+            <input
+              id="login-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@campus.edu"
+              disabled={isSubmitting}
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="login-password">Password</label>
+            <div className="auth-input-wrap">
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Your password"
+                disabled={isSubmitting}
+                required
+              />
+              <button
+                type="button"
+                className="auth-password-toggle"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                disabled={isSubmitting}
+              >
+                {showPassword ? (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" y1="2" x2="22" y2="22" />
+                  </svg>
+                ) : (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="auth-submit-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
+          </button>
+
+        </form>
+
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
 
         <button
           type="button"
@@ -96,14 +236,16 @@ function Login() {
 
           <span>
             {isSubmitting
-              ? 'Connecting to Google...'
+              ? 'Connecting...'
               : 'Continue with Google'}
           </span>
         </button>
 
         <p className="auth-footer">
-          New to AlertU? Your account will be created
-          automatically.
+          New to AlertU?{' '}
+          <Link to="/register" className="auth-link">
+            Create an account
+          </Link>
         </p>
 
       </div>

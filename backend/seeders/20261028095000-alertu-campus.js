@@ -17,8 +17,8 @@ module.exports = {
       await queryInterface.bulkInsert('campuses', [
         {
           id,
-          name: 'AlertU Demo Campus',
-          slug: 'alertu-demo-campus',
+          name: 'AlertU Campus',
+          slug: 'alertu-campus',
           timezone: 'UTC',
           centerLatitude: 6.5244,
           centerLongitude: 3.3792,

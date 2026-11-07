@@ -7,30 +7,35 @@ import {
 } from 'react-leaflet'
 
 import L from 'leaflet'
-import { DEFAULT_CAMPUS } from '../../data/campus'
 import {
-  getIncidents,
-  subscribeToIncidents,
-} from '../../services/incidentStore'
-import type { Incident } from '../../types/incident'
+  fetchIncidents,
+  INCIDENT_CATEGORIES,
+  INCIDENT_CATEGORY_LABELS,
+} from '../../services/incidents'
+import type {
+  Incident,
+  IncidentCategory,
+} from '../../types/incident'
 
 import './CampusMap.css'
 
-function getCategoryIcon(category: string): string {
-  const icons: Record<string, string> = {
-    Security: '🛡️',
-    Facilities: '🔧',
-    Harassment: '⚠️',
-    Other: '📍',
+function getCategoryIcon(category: IncidentCategory): string {
+  const icons: Record<IncidentCategory, string> = {
+    safety: '🛡️',
+    harassment: '⚠️',
+    theft: '🕵️',
+    vandalism: '🔨',
+    infrastructure: '🔧',
+    medical: '🚑',
+    fire: '🔥',
+    other: '📍',
   }
 
   return icons[category] || '📍'
 }
 
 function getIncidentIcon(incident: Incident) {
-  const statusClass = incident.status
-    .toLowerCase()
-    .replace(' ', '-')
+  const statusClass = incident.status.replace(/_/g, '-')
 
   return L.divIcon({
     className: 'incident-marker-wrapper',
@@ -48,55 +53,82 @@ function getIncidentIcon(incident: Incident) {
 }
 
 function CampusMap() {
-const [incidents, setIncidents] = useState<Incident[]>(
-  getIncidents
-)
+  const [incidents, setIncidents] = useState<Incident[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
 
-useEffect(() => {
-  const unsubscribe = subscribeToIncidents(() => {
-    setIncidents(getIncidents())
-  })
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
 
-  return unsubscribe
-}, [])
+    fetchIncidents({ signal: controller.signal })
+      .then((records) => {
+        if (active) setIncidents(records)
+      })
+      .catch((loadError) => {
+        if (!active || controller.signal.aborted) return
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Could not load map incidents.',
+        )
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
 
-const [activeCategory, setActiveCategory] = useState('All')
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [])
 
-const categories = [
-  'All',
-  'Security',
-  'Facilities',
-  'Harassment',
-  'Other',
-]
+  const [activeCategory, setActiveCategory] = useState<
+    IncidentCategory | 'all'
+  >('all')
 
-const campusIncidents = incidents.filter(
-  (incident) => incident.campusId === DEFAULT_CAMPUS.id
-)
+  const categories: Array<{
+    label: string
+    value: IncidentCategory | 'all'
+  }> = [
+    { label: 'All', value: 'all' },
+    ...INCIDENT_CATEGORIES.map((category) => ({
+      label: INCIDENT_CATEGORY_LABELS[category],
+      value: category,
+    })),
+  ]
 
-const filteredIncidents = activeCategory === 'All'
-  ? campusIncidents
-  : campusIncidents.filter(
-      (incident) => incident.category === activeCategory
-    )
+  const filteredIncidents =
+    activeCategory === 'all'
+      ? incidents
+      : incidents.filter(
+          (incident) => incident.category === activeCategory,
+        )
 
   const [selectedIncident, setSelectedIncident] =
     useState<Incident | null>(null)
 
   return (
     <div className="campus-map">
-      
+      {isLoading && (
+        <div className="map-status">Loading incidents...</div>
+      )}
+
+      {error && (
+        <div className="map-status map-status-error">{error}</div>
+      )}
+
       <div className="map-category-filters">
         {categories.map((category) => (
           <button
-            key={category}
+            key={category.value}
             type="button"
             className={
-              activeCategory === category ? 'active' : ''
+              activeCategory === category.value ? 'active' : ''
             }
-            onClick={() => setActiveCategory(category)}
+            onClick={() => setActiveCategory(category.value)}
           >
-            {category}
+            {category.label}
           </button>
         ))}
       </div>
@@ -159,7 +191,7 @@ const filteredIncidents = activeCategory === 'All'
 
           <span className="incident-panel-category">
             {getCategoryIcon(selectedIncident.category)}
-            {' '}{selectedIncident.category}
+            {' '}{selectedIncident.categoryLabel}
           </span>
 
           <h3>{selectedIncident.title}</h3>
@@ -168,10 +200,13 @@ const filteredIncidents = activeCategory === 'All'
 
           <p>{selectedIncident.time}</p>
 
-          <span className={`popup-status ${
-            selectedIncident.status.toLowerCase().replace(' ', '-')
-          }`}>
-            {selectedIncident.status}
+          <span
+            className={`popup-status ${selectedIncident.status.replace(
+              /_/g,
+              '-',
+            )}`}
+          >
+            {selectedIncident.statusLabel}
           </span>
         </div>
       )}

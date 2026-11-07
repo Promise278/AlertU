@@ -1,6 +1,10 @@
 # AlertU API Reference
 
-Base URL in development: `http://localhost:4000`
+> **Deployment note (2026-11-03):** only `/`, `/health`, `/health/live`, `/auth/*`, `/me`, and `/devices/*` are currently mounted on production. The Reports, Incidents, Moderation, Posts, Notification Preferences, and Maps sections below are **draft contracts** and return `404` until their routers are mounted. For the frontend handoff, use [`FRONTEND_API_GUIDE.md`](FRONTEND_API_GUIDE.md).
+
+Production base URL: `https://alertu.onrender.com`
+
+Local base URL: `http://localhost:5000`
 
 All application responses use JSON. Protected endpoints require a Firebase ID token:
 
@@ -88,8 +92,8 @@ curl "$API/me" -H "Authorization: Bearer $TOKEN"
     "campusId": "00000000-0000-4000-8000-000000000001",
     "campus": {
       "id": "00000000-0000-4000-8000-000000000001",
-      "name": "AlertU Demo Campus",
-      "slug": "alertu-demo-campus",
+      "name": "AlertU Campus",
+      "slug": "alertu-campus",
       "timezone": "UTC"
     },
     "accountStatus": "active",
@@ -539,6 +543,39 @@ Body must contain `enabled` and/or `categories`:
 ```
 
 Categories must be unique and valid. Returns the updated preferences.
+
+### `GET /notifications`
+
+Authentication required. Returns the caller's in-app notification events, newest first. Supports `page` and `limit` query parameters.
+
+```json
+{
+  "data": [
+    {
+      "id": "...",
+      "type": "incident_status_changed",
+      "title": "Incident update",
+      "message": "An incident near you was verified.",
+      "data": {
+        "incidentId": "..."
+      },
+      "state": "sent",
+      "createdAt": "2026-11-07T10:00:00.000Z",
+      "sentAt": "2026-11-07T10:00:02.000Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+Read state is currently managed by the client; the backend feed is append-only.
 
 ## Google Maps
 

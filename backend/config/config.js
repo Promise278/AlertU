@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const { normalizeDatabaseUrl } = require('./databaseUrl');
+
 const useSsl = process.env.DB_SSL !== 'false';
 const rejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true';
 const ca = process.env.DB_SSL_CA_BASE64
@@ -28,10 +30,20 @@ const common = {
 };
 
 const urlConfig = envVar
-  ? {
-      use_env_variable: envVar,
-      ...common,
-    }
+  ? (() => {
+      const rawUrl = process.env[envVar];
+      const normalizedUrl = normalizeDatabaseUrl(rawUrl);
+
+      return normalizedUrl === rawUrl
+        ? {
+            use_env_variable: envVar,
+            ...common,
+          }
+        : {
+            url: normalizedUrl,
+            ...common,
+          };
+    })()
   : null;
 
 const discreteConfig = {

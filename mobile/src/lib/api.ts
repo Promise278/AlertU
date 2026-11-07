@@ -5,10 +5,14 @@ import { firebaseAuth } from './firebase';
 const DEV_AUTH_TOKEN = process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN;
 const configuredUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
 
-const defaultUrl = Platform.select({
+const localUrl = Platform.select({
   android: 'http://10.0.2.2:5000',
   default: 'http://localhost:5000',
 });
+
+// Development still uses the local backend. Release builds use the hosted API
+// unless EXPO_PUBLIC_API_URL explicitly overrides it.
+const defaultUrl = __DEV__ ? localUrl : 'https://alertu.onrender.com';
 
 export const API_URL = (configuredUrl || defaultUrl || 'http://localhost:5000').replace(
   /\/+$/,

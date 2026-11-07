@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import './BottomNav.css'
 
 const mobileItems = [
-  { label: 'Home', path: '/', icon: '⌂' },
+  { label: 'Home', path: '/dashboard', icon: '⌂' },
   { label: 'Map', path: '/map', icon: '◎' },
   { label: 'Report', path: '/report', icon: '+' },
   { label: 'Saved', path: '/saved', icon: '☆' },
@@ -16,7 +16,7 @@ function BottomNav() {
         <NavLink
           key={item.path}
           to={item.path}
-          end={item.path === '/'}
+          end={item.path === '/dashboard'}
           className={({ isActive }) =>
             `mobile-nav-link ${isActive ? 'active' : ''} ${
               item.path === '/report' ? 'mobile-report-link' : ''
