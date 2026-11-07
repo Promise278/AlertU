@@ -32,13 +32,17 @@ const options = {
     : {}),
 };
 
+const hasDiscreteDatabase = Boolean(
+  process.env.DB_NAME && process.env.DB_USER && process.env.DB_HOST
+);
 const databaseUrl = normalizeDatabaseUrl(
   process.env.DATABASE_URL || process.env.DB_URL
 );
 
-const connection = databaseUrl
-  ? new Sequelize(databaseUrl, options)
-  : new Sequelize(
+// Prefer explicit DB_* settings when complete. This keeps the runtime on the
+// configured host and port instead of silently using a stale DATABASE_URL.
+const connection = hasDiscreteDatabase
+  ? new Sequelize(
       process.env.DB_NAME,
       process.env.DB_USER,
       process.env.DB_PASSWORD,
@@ -47,6 +51,18 @@ const connection = databaseUrl
         host: process.env.DB_HOST,
         port: Number(process.env.DB_PORT) || 5432,
       }
-    );
+    )
+  : databaseUrl
+    ? new Sequelize(databaseUrl, options)
+    : new Sequelize(
+        process.env.DB_NAME,
+        process.env.DB_USER,
+        process.env.DB_PASSWORD,
+        {
+          ...options,
+          host: process.env.DB_HOST,
+          port: Number(process.env.DB_PORT) || 5432,
+        }
+      );
 
 module.exports = connection;
