@@ -1,11 +1,84 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+
+/* =================================
+   ALERTU — GLOBAL DESIGN SYSTEM
+================================= */
+
+/* 1. Brand colours */
+:root {
+  --color-navy: #10243A;
+  --color-yellow: #FFB51B;
+
+  /* 2. Neutral colours */
+  --color-white: #FFFFFF;
+  --color-background: #F5F7FA;
+  --color-border: #E5EAF0;
+
+  /* 3. Semantic colours */
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+  --color-success: #10B981;
+  --color-purple: #8B5CF6;
+  --color-warning: #F59E0B;
+
+  /* 4. Typography */
+  font-family: Inter, sans-serif;
+  color: var(--color-navy);
+  background: var(--color-background);
+
+  /* 5. Text rendering */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 6. Consistent box sizing */
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f7fa;
-  color: #1e293b;
+/* 7. Remove browser default spacing */
+* {
+  margin: 0;
+  padding: 0;
 }
+
+/* 8. Base document styles */
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+/* 9. Form elements inherit typography */
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 10. Buttons and links */
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 11. Images */
+img {
+  display: block;
+  max-width: 100%;
+}
+

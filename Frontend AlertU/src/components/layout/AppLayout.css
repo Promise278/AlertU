@@ -1,0 +1,59 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  padding: 28px;
+}
+
+/* Desktop sidebar positioning */
+
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: calc(100vh - 72px);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Mobile */
+
+@media (max-width: 767px) {
+  .app-body {
+    display: block;
+  }
+
+  .app-sidebar {
+    display: none;
+  }
+
+  .app-main {
+    width: 100%;
+    padding: 20px 16px 100px;
+  }
+}
+
+/* Tablet */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-sidebar {
+    width: 210px;
+    padding: 24px 12px;
+  }
+
+  .app-main {
+    padding: 22px 18px;
+  }
+}

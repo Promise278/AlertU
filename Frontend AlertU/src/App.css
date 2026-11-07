@@ -1,0 +1,17 @@
+.app-root {
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--color-background);
+}
+
+.app-root h1 {
+  color: var(--color-navy);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.app-root p {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 15px;
+}

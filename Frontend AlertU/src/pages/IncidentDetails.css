@@ -1,0 +1,123 @@
+.incident-details-page {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.incident-back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  color: var(--color-info);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.incident-details-card {
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.incident-details-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.incident-details-category {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.incident-details-status {
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.incident-details-status.under-review {
+  background: #fff4d8;
+  color: #9a6700;
+}
+
+.incident-details-status.verified {
+  background: #e7f8ef;
+  color: #087443;
+}
+
+.incident-details-status.resolved {
+  background: #e8f1ff;
+  color: #2458a6;
+}
+
+.incident-details-card h1 {
+  margin-bottom: 28px;
+  color: var(--color-navy);
+  font-size: 26px;
+  line-height: 1.4;
+}
+
+.incident-details-information {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  padding: 24px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.incident-details-information span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.incident-details-information p {
+  margin-top: 7px;
+  color: var(--color-navy);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.incident-demo-notice {
+  margin-top: 22px;
+  padding: 13px;
+  border-radius: 8px;
+  background: var(--color-background);
+  color: #64748b;
+  font-size: 12px;
+}
+
+.incident-not-found {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.incident-not-found p {
+  margin: 12px 0 20px;
+  color: #64748b;
+}
+
+.incident-not-found a {
+  color: var(--color-info);
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .incident-details-card {
+    padding: 20px;
+  }
+
+  .incident-details-card h1 {
+    font-size: 21px;
+  }
+
+  .incident-details-information {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+

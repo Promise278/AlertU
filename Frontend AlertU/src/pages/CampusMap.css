@@ -1,0 +1,25 @@
+.campus-map-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.campus-map-page-heading h1 {
+  margin-top: 6px;
+  color: var(--color-navy);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.campus-map-page-heading p:last-child {
+  margin-top: 8px;
+  color: #8793a1;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 767px) {
+  .campus-map-page-heading h1 {
+    font-size: 24px;
+  }
+}
