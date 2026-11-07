@@ -1,6 +1,38 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import { useAuth } from '../context/AuthContext'
+
 import './Profile.css'
 
 function Profile() {
+  const { user, isAuthenticated, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [error, setError] = useState('')
+
+  const displayName = user?.displayName || 'Demo Student'
+
+  const avatarInitial = displayName
+    .trim()
+    .charAt(0)
+    .toUpperCase()
+
+  const handleSignOut = async () => {
+    setError('')
+    setIsSigningOut(true)
+
+    try {
+      await logout()
+      navigate('/', { replace: true })
+    } catch {
+      setError('Unable to sign out. Please try again.')
+    } finally {
+      setIsSigningOut(false)
+    }
+  }
+
   return (
     <div className="profile-page">
 
@@ -13,17 +45,21 @@ function Profile() {
       <section className="profile-card">
 
         <div className="profile-avatar">
-          S
+          {avatarInitial}
         </div>
 
         <div className="profile-identity">
-          <h2>Demo Student</h2>
-          <p>Student account</p>
+          <h2>{displayName}</h2>
+          <p>
+            {user?.role || 'Student account'}
+          </p>
         </div>
 
-        <span className="profile-demo-badge">
-          DEMO
-        </span>
+        {!isAuthenticated && (
+          <span className="profile-demo-badge">
+            DEMO
+          </span>
+        )}
 
         <div className="profile-divider"></div>
 
@@ -31,30 +67,60 @@ function Profile() {
 
           <div className="profile-information-item">
             <span>Full name</span>
-            <strong>Demo Student</strong>
+            <strong>{displayName}</strong>
           </div>
 
           <div className="profile-information-item">
             <span>Email address</span>
-            <strong>student@example.com</strong>
+            <strong>
+              {user?.email || 'student@example.com'}
+            </strong>
           </div>
 
           <div className="profile-information-item">
             <span>Campus</span>
-            <strong>Not assigned</strong>
+            <strong>
+              {user?.campusId || 'Not assigned'}
+            </strong>
           </div>
 
           <div className="profile-information-item">
             <span>Account type</span>
-            <strong>Student</strong>
+            <strong>
+              {user?.role || 'Student'}
+            </strong>
           </div>
 
         </div>
 
-        <p className="profile-demo-notice">
-          This is demonstration account information.
-          Your actual details will appear after authentication is connected.
-        </p>
+        {!isAuthenticated && (
+          <p className="profile-demo-notice">
+            This is demonstration account information.
+            Your actual details will appear after
+            authentication is connected.
+          </p>
+        )}
+
+        {isAuthenticated && (
+          <div className="profile-signout-section">
+
+            {error && (
+              <p className="profile-signout-error" role="alert">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="button"
+              className="profile-signout-button"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+            >
+              {isSigningOut ? 'Signing out...' : 'Sign out'}
+            </button>
+
+          </div>
+        )}
 
       </section>
 
@@ -63,4 +129,3 @@ function Profile() {
 }
 
 export default Profile
-

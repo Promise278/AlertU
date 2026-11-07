@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter,
   Routes,
@@ -5,6 +6,7 @@ import {
 } from 'react-router-dom'
 
 import AppLayout from './components/layout/AppLayout'
+
 import CampusPulse from './pages/CampusPulse'
 import CampusMapPage from './pages/CampusMap'
 import IncidentDetails from './pages/IncidentDetails'
@@ -14,10 +16,24 @@ import Notifications from './pages/Notifications'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 
+import Login from './pages/auth/Login'
+
+import './pages/auth/Auth.css'
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* Unified authentication route */}
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        {/* Main application routes */}
+
         <Route element={<AppLayout />}>
 
           <Route path="/" element={<CampusPulse />} />
@@ -40,6 +56,7 @@ function App() {
           />
 
         </Route>
+
       </Routes>
     </BrowserRouter>
   )
